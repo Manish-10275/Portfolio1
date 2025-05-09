@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes roadProgress {
+  from {
+    transform: scaleX(0);
+  
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-roadProgress {
+  animation: roadProgress 2s ease-out forwards;
+}
