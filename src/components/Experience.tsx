@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BookOpen, Code, Pencil, Layout, Users, Brain } from 'lucide-react';
+import { BookOpen, Code, Pencil, LayoutGrid as Layout, Users, Brain } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -9,101 +9,70 @@ interface ExperienceItem {
   icon: string;
 }
 
-const ExperienceCard = ({ title, description, icon, delay = 0 }) => {
-  const getIcon = (iconName: string) => {
-    const icons = {
-      'code': <Code className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />,
-      'layout': <Layout className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
-      'book': <BookOpen className="w-6 h-6 text-green-600 dark:text-green-400" />,
-      'pencil': <Pencil className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />,
-      'users': <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />,
-      'brain': <Brain className="w-6 h-6 text-pink-600 dark:text-pink-400" />
-    };
-    return icons[iconName] || <Code className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />;
-  };
+const iconMap: Record<string, React.ReactNode> = {
+  code: <Code className="w-5 h-5" />,
+  layout: <Layout className="w-5 h-5" />,
+  book: <BookOpen className="w-5 h-5" />,
+  pencil: <Pencil className="w-5 h-5" />,
+  users: <Users className="w-5 h-5" />,
+  brain: <Brain className="w-5 h-5" />,
+};
 
+const iconColors = ['from-blue-500 to-cyan-500', 'from-cyan-500 to-teal-500', 'from-teal-500 to-green-500', 'from-sky-500 to-blue-500', 'from-indigo-500 to-blue-500', 'from-blue-600 to-cyan-400'];
+
+const defaultData: ExperienceItem[] = [
+  { icon: 'code', title: "Self-Taught Programming", description: "Gained expertise in Python, Java, C++, C, and HTML through self-learning using free online platforms and open resources." },
+  { icon: 'layout', title: "App Development", description: "Developed a plant disease recognition app using Python, showcasing practical application of technical skills in agriculture technology." },
+  { icon: 'book', title: "Published Author", description: "Published two books—'Chalo Aaj Kuch Dil Ki Baat Ho Jaye' and 'The SILENCE'—featuring poetry on themes of overthinking and heartbreak." },
+  { icon: 'pencil', title: "Creative Design", description: "Created impactful advertising and branding materials, including logo designs and ad campaigns, through freelance projects." },
+  { icon: 'users', title: "Project Leadership", description: "Led and managed teams for innovative school projects and competitions, including the ATAL Marathon, ensuring successful task completion." },
+  { icon: 'brain', title: "Self-Development", description: "Utilized research skills and self-discipline to acquire in-depth knowledge across diverse fields, showcasing adaptability and growth." },
+];
+
+const ExperienceCard = ({ item, index }: { item: ExperienceItem; index: number }) => {
+  const color = iconColors[index % iconColors.length];
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay }}
-      className="bg-white/80 dark:bg-gray-800/80 rounded-lg p-6 shadow-lg backdrop-blur-sm"
+      transition={{ delay: index * 0.08, duration: 0.5 }}
+      className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 card-glow transition-all duration-300 hover:-translate-y-1"
     >
-      <div className="flex items-center mb-4">
-        <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-          {getIcon(icon)}
-        </div>
+      {/* Number badge */}
+      <div className="absolute top-4 right-4 text-xs font-mono text-gray-700 select-none">
+        {String(index + 1).padStart(2, '0')}
       </div>
-      <h3 className="text-xl font-semibold mb-3">{title}</h3>
-      <p className="text-gray-600 dark:text-gray-400">{description}</p>
+
+      {/* Top accent */}
+      <motion.div
+        className={`absolute top-0 left-6 h-[2px] w-0 group-hover:w-16 bg-gradient-to-r ${color} transition-all duration-500 rounded-b`}
+      />
+
+      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center text-white mb-4 shadow-lg`}>
+        {iconMap[item.icon] ?? iconMap.code}
+      </div>
+      <h3 className="text-white font-semibold text-base mb-2 group-hover:text-blue-300 transition-colors duration-200">
+        {item.title}
+      </h3>
+      <p className="text-gray-400 text-sm leading-relaxed">{item.description}</p>
     </motion.div>
   );
 };
 
 export const Experience = () => {
-  const [experienceData, setExperienceData] = useState<ExperienceItem[]>([]);
+  const [data, setData] = useState<ExperienceItem[]>([]);
 
   useEffect(() => {
-    fetchExperience();
+    supabase.from('experience').select('*').then(({ data: rows, error }) => {
+      setData(error || !rows?.length ? defaultData : rows);
+    });
   }, []);
 
-  const fetchExperience = async () => {
-    const { data, error } = await supabase
-      .from('experience')
-      .select('*');
-    
-    if (error) {
-      console.error('Error fetching experience:', error);
-      // Fallback to default data
-      setExperienceData([
-        {
-          icon: 'code',
-          title: "Self-Taught Programming",
-          description: "Gained expertise in Python, Java, C++, C, and HTML through self-learning using free online platforms like YouTube and other open resources."
-        },
-        {
-          icon: 'layout',
-          title: "App Development",
-          description: "Developed a plant disease recognition app using Python, showcasing practical application of technical skills in agriculture technology."
-        },
-        {
-          icon: 'book',
-          title: "Published Author",
-          description: "Published two books, 'Chalo Aaj Kuch Dil Ki Baat Ho Jaye' and 'The SILENCE,' featuring shayaris and poetry on themes of overthinking and heartbreak."
-        },
-        {
-          icon: 'pencil',
-          title: "Creative Design",
-          description: "Created impactful advertising and branding materials, including logo designs and ad campaigns, through freelance projects."
-        },
-        {
-          icon: 'users',
-          title: "Project Leadership",
-          description: "Led and managed teams for innovative school projects and competitions, including the ATAL Marathon, ensuring successful completion of complex tasks."
-        },
-        {
-          icon: 'brain',
-          title: "Self-Development",
-          description: "Utilized research skills and self-discipline to acquire in-depth knowledge across diverse fields, showcasing adaptability and commitment to growth."
-        }
-      ]);
-      return;
-    }
-    
-    setExperienceData(data);
-  };
-
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {experienceData.map((exp, index) => (
-        <ExperienceCard
-          key={index}
-          title={exp.title}
-          description={exp.description}
-          icon={exp.icon}
-          delay={index * 0.1}
-        />
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {data.map((item, i) => (
+        <ExperienceCard key={i} item={item} index={i} />
       ))}
     </div>
   );
